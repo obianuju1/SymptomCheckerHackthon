@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/components/hooks/use-toast";
+import { useRouter } from "next/router";  // Import useRouter
 
 type Option = {
   label: string;
@@ -28,6 +28,7 @@ export default function DropdownSearchSelect() {
   const [selectedOptions, setSelectedOptions] = useState<Option[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(true); // Dropdown is open by default
+  const router = useRouter();  // Initialize router
 
   // Handle option selection/deselection
   const toggleOption = (option: Option) => {
@@ -53,11 +54,11 @@ export default function DropdownSearchSelect() {
     setSelectedOptions(selectedOptions.filter((selected) => selected.value !== option.value));
   };
 
-  // Handle form submission (can be extended to send data)
+  // Handle form submission and pass selected options to confirmation page
   const handleSubmit = () => {
-    toast({
-      title: "You selected the following symptoms:",
-      description: selectedOptions.map((option) => option.label).join(", "),
+    router.push({
+      pathname: "/confirmation",  // The path to your confirmation page
+      query: { symptoms: JSON.stringify(selectedOptions) },  // Pass selected symptoms as query
     });
   };
 
@@ -75,8 +76,8 @@ export default function DropdownSearchSelect() {
           className="w-full p-2 mb-4"
         />
 
-         {/* Display selected options */}
-         {selectedOptions.length > 0 && (
+        {/* Display selected options */}
+        {selectedOptions.length > 0 && (
           <div className="mb-2">
             <span className="text-sm text-gray-500">Selected: </span>
             {selectedOptions.map((option) => (
@@ -119,7 +120,7 @@ export default function DropdownSearchSelect() {
         )}
 
         {/* Submit Button */}
-        <Button onClick={handleSubmit} className="w-full ">
+        <Button onClick={handleSubmit} className="w-full">
           Submit
         </Button>
       </div>
