@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useRouter } from "next/router";  // Import useRouter
+import { useSearchParams, useRouter } from "next/navigation";  // Import useSearchParams from next/navigation
 
 type Option = {
   label: string;
@@ -28,7 +28,8 @@ export default function DropdownSearchSelect() {
   const [selectedOptions, setSelectedOptions] = useState<Option[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(true); // Dropdown is open by default
-  const router = useRouter();  // Initialize router
+  const router = useRouter();  // Initialize router for navigating
+  const searchParams = useSearchParams(); // New search params hook from next/navigation
 
   // Handle option selection/deselection
   const toggleOption = (option: Option) => {
@@ -56,15 +57,18 @@ export default function DropdownSearchSelect() {
 
   // Handle form submission and pass selected options to confirmation page
   const handleSubmit = () => {
-    router.push({
-      pathname: "/confirmation",  // The path to your confirmation page
-      query: { symptoms: JSON.stringify(selectedOptions) },  // Pass selected symptoms as query
-    });
+    // Create the query string
+    const queryParams = new URLSearchParams();
+    queryParams.set("symptoms", JSON.stringify(selectedOptions));
+  
+    // Use router.push to navigate with the query string
+    router.push(`/confirmation?${queryParams.toString()}`);
   };
+  
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100">
-      <div className="relative w-80 p-4 bg-white rounded-lg shadow-lg">
+    <div className="min-h-screen flex justify-center items-center ">
+      <div className="relative w-80 p-4 bg-white ">
         {/* Page Title */}
         <h1 className="text-xl font-semibold mb-4 text-center">Select any symptoms that you are experiencing</h1>
 
