@@ -9,8 +9,8 @@ export default function Home() {
         <h3 className="scroll-m-20 text-l tracking-tight">Diagnosing patients with just a few clicks </h3>
       </div>
       <div>
-      <Button asChild className="block w-[50%] mb-2 mx-auto rounded-lg bg-green-500 hover:bg-green-500"><Link href={'/register'} className="text-center px-0">Sign Up</Link></Button>
-      <Link href={'/login'} className="text-xs hover:underline">Existing user ? Log in </Link>
+      <Button asChild className="block w-[60%] mb-2 mx-auto text-center rounded-lg bg-green-500 hover:bg-green-500"><Link href={'auth/register'} className="text-center px-0">Sign Up</Link></Button>
+      <Link href={'auth/login'} className="text-xs hover:underline">Existing user ? Log in </Link>
       </div>
     </header>
   );
