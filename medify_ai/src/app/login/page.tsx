@@ -1,116 +1,106 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useEffect, useState } from "react";
-
-import { toast } from "@/components/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-// Validation schema with Zod
-const FormSchema = z.object({
-  username: z.string().min(2, { message: "Username must be at least 2 characters." }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters." })
-    .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter." })
-    .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter." })
-    .regex(/[0-9]/, { message: "Password must contain at least one number." })
-    .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character." }),
-});
-
 export default function Login() {
-  const [isClient, setIsClient] = useState(false); // State to track client-side rendering
+  const router = useRouter();
 
-  // useEffect to set isClient to true after the component mounts
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  // Local state for form inputs
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({ username: "", password: "" });
 
-  // Form setup with react-hook-form and Zod validation
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  });
+  // Form validation
+  const validate = () => {
+    let valid = true;
+    const newErrors = { username: "", password: "" };
 
-  // Form submit handler
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
-  }
+    if (!username) {
+      newErrors.username = "Username is required.";
+      valid = false;
+    } else if (username.length < 2) {
+      newErrors.username = "Username must be at least 2 characters.";
+      valid = false;
+    }
 
-  if (!isClient) {
-    return null; // Prevent rendering on the server
-  }
+    if (!password) {
+      newErrors.password = "Password is required.";
+      valid = false;
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters.";
+      valid = false;
+    } else if (!/[A-Z]/.test(password)) {
+      newErrors.password = "Password must contain at least one uppercase letter.";
+      valid = false;
+    } else if (!/[a-z]/.test(password)) {
+      newErrors.password = "Password must contain at least one lowercase letter.";
+      valid = false;
+    } else if (!/[0-9]/.test(password)) {
+      newErrors.password = "Password must contain at least one number.";
+      valid = false;
+    } else if (!/[^A-Za-z0-9]/.test(password)) {
+      newErrors.password = "Password must contain at least one special character.";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (validate()) {
+      console.log("Form Submitted:", { username, password });
+      router.push("/symptoms");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8">
-      {/* Form container */}
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col items-center space-y-6 w-full max-w-sm"
-        >
-          {/* Login Title */}
-          <h2 className="text-2xl font-bold text-center mb-4">Login</h2>
+      <form onSubmit={handleSubmit} className="flex flex-col items-center space-y-6 w-full max-w-sm">
+        <h2 className="text-2xl font-bold text-center mb-4">Login</h2>
 
-          {/* Username Field */}
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter username"
-                    {...field}
-                    className="w-72" // Adjust the width of the input box
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        {/* Username Field */}
+        <div className="flex flex-col w-72">
+          <label htmlFor="username" className="mb-2">
+            Username
+          </label>
+          <Input
+            id="username"
+            placeholder="Enter username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-72"
           />
+          {errors.username && <span className="text-red-500 text-sm">{errors.username}</span>}
+        </div>
 
-          {/* Password Field */}
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter password"
-                    type="password"
-                    {...field}
-                    className="w-72" // Adjust the width of the input box
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        {/* Password Field */}
+        <div className="flex flex-col w-72">
+          <label htmlFor="password" className="mb-2">
+            Password
+          </label>
+          <Input
+            id="password"
+            placeholder="Enter password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-72"
           />
+          {errors.password && <span className="text-red-500 text-sm">{errors.password}</span>}
+        </div>
 
-          {/* Submit Button */}
-          <Button type="submit" className="w-40">
-            Login
-          </Button>
-        </form>
-      </Form>
+        {/* Submit Button */}
+        <Button type="submit" className="w-40">
+          Login
+        </Button>
+      </form>
     </div>
   );
 }
