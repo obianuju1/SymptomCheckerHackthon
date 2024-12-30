@@ -9,7 +9,8 @@ import {
 } from "firebase/auth";
 import { auth, db } from "../src/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { useRouter } from "next/navigation"; // Import useRouter for redirection in Next.js
+import { useRouter, usePathname } from "next/navigation"; // Import useRouter for redirection in Next.js
+import { Router } from "express";
 
 // Create AuthContext
 const AuthContext = React.createContext<any>(null);
@@ -20,16 +21,23 @@ export const useAuth = () => useContext(AuthContext);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<any>(null);
     const router = useRouter(); // Access the useRouter hook for navigation
+    const pathname = usePathname()
+    const excludedPaths = ['/auth/register', '/']
 
     // Check if the user is signed in on mount
     useEffect(() => {
         if (router) { // Check if router exists
             const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+                if (excludedPaths.includes(pathname)){
+                    return
+                }
+
+
                 setUser(currentUser);
                 if (currentUser) {
                     router.push("/dashboard"); 
                 } else {
-                    router.push("/"); 
+                    router.push("/auth/login"); 
                 }
             });
     
