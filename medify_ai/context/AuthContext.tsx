@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<any>(null);
     const router = useRouter(); // Access the useRouter hook for navigation
     const pathname = usePathname()
-    const excludedPaths = ['/auth/register', '/']
+    const excludedPaths = ['/auth/register', '/'] // excluded paths
 
     // Check if the user is signed in on mount
     useEffect(() => {
