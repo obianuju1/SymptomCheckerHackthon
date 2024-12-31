@@ -1,9 +1,7 @@
-// logic for firebase configuration 
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// use environment variables to 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -11,11 +9,18 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.MEASUREMENT_ID
+  measurementId: process.env.NEXT_PUBLIC_MEASUREMENT_ID,
 };
 
+console.log('Firebase Config:', firebaseConfig);
+console.log(process.env.NEXT_PUBLIC_FIREBASE_API_KEY)
+
+
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+console.log(`firebase initialized: ${app}`)
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-export{auth,db};
+export { auth, db };

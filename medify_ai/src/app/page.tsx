@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <header className=" w-screen h-screen bg-center bg-cover bg-no-repeat bg-black/40 bg-blend-darken flex flex-col items-center justify-center text-white gap-2" style={{backgroundImage: "url('/Home_Background_Image.jpg')"}}>
+    <header className=" w-screen h-screen bg-center bg-cover bg-no-repeat bg-black/40 bg-blend-darken flex flex-col items-center justify-center text-white gap-2 bg-main-image">
       <div className="text-center ">
         <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">Medify AI</h1>
         <h3 className="scroll-m-20 text-l tracking-tight">Diagnosing patients with just a few clicks </h3>
