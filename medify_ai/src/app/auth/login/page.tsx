@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -10,10 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import AuthLayout from "../authLayout";
-import { Card, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { useContext } from "react";
+import { useAuth} from "../../../../context/AuthContext";
 // Validation schema with Zod
 const FormSchema = z.object({
-  username: z.string().min(2, { message: "Username must be at least 2 characters." }),
+  email: z.string().email({ message: "email must be valid fromat" }),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters." })
@@ -25,7 +28,9 @@ const FormSchema = z.object({
 
 export default function Login() {
   const [isClient, setIsClient] = useState(false); // State to track client-side rendering
-
+  const [loginError,setLoginError] = useState("")
+  const { login } = useAuth() 
+  
   // useEffect to set isClient to true after the component mounts
   useEffect(() => {
     setIsClient(true);
@@ -35,13 +40,13 @@ export default function Login() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
   // Form submit handler
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
     toast({
       title: "You submitted the following values:",
       description: (
@@ -49,7 +54,16 @@ export default function Login() {
           <code className="text-white">{JSON.stringify(data, null, 2)}</code>
         </pre>
       ),
+
+
     });
+
+    try {
+      await login(data.email,data.password)
+    } catch (error: any) {
+      console.log(error.message)
+      setLoginError(error.message)
+    }
 
     
   }
@@ -61,6 +75,7 @@ export default function Login() {
   return (
     <AuthLayout>
       {/* Form container */}
+      <CardContent>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -72,13 +87,13 @@ export default function Login() {
           {/* Username Field */}
           <FormField
             control={form.control}
-            name="username"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Enter username"
+                    placeholder="Enter email"
                     {...field}
                     className="w-72" // Adjust the width of the input box
                   />
@@ -109,12 +124,16 @@ export default function Login() {
           />
 
           {/* Submit Button */}
-          <Button type="submit" className="w-40">
+          <Button type="submit" className="w-40 bg-green-500 hover:bg-green-500">
             Login
           </Button>
-          
         </form>
       </Form>
+      {loginError && <p className="w-full text-center text-sm text-red-600 mt-2">error logging in user</p>}
+      </CardContent>
+      <CardFooter>
+        <Link href={'/auth/register'} className="w-full text-center hover:underline text-sm ">New User ? Sign up</Link>
+        </CardFooter>
       </AuthLayout>
   );
 }
