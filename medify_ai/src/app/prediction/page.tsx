@@ -26,32 +26,32 @@ const Prediction = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
-      <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl">
-        <h1 className="text-4xl font-extrabold text-center text-gray-900 my-6">
+    <div className="w-screen h-screen bg-[#1F2327] text-white flex items-center justify-center py-12 px-4">
+      <div className="max-w-4xl w-full bg-[#2A2F36] rounded-lg shadow-xl p-8">
+        <h1 className="text-4xl font-extrabold text-center text-green-400 my-6">
           Your Predicted Disease is:
-          <span className="text-blue-600">{disease}</span>
+          <h6 className="text-green-600">{disease}</h6>
         </h1>
 
-        <Card className="rounded-lg p-8 bg-white shadow-lg border border-gray-200">
+        <Card className="rounded-lg bg-[#1A1D22] shadow-lg border border-[#333B44]">
           <CardHeader>
-            <CardTitle className="text-2xl font-semibold text-gray-800">
+            <CardTitle className="text-2xl font-semibold text-green-400">
               Disease Overview
             </CardTitle>
-            <CardDescription className="text-gray-500">
+            <CardDescription className="text-gray-400">
               A concise breakdown of the disease, symptoms, and treatment options.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="grid gap-4">
             <div className="mb-6">
-              <p className="text-lg font-semibold text-gray-800 mb-2">Definition:</p>
-              <p className="text-gray-700">{definition}</p>
+              <p className="text-lg font-semibold text-green-400 mb-2">Definition:</p>
+              <p className="text-gray-300">{definition}</p>
             </div>
 
             <div className="mb-6">
-              <p className="text-lg font-semibold text-gray-800 mb-2">Symptoms:</p>
-              <ul className="list-disc list-inside text-gray-700">
+              <p className="text-lg font-semibold text-green-400 mb-2">Symptoms:</p>
+              <ul className="list-disc list-inside text-gray-300">
                 {symptoms.split(", ").map((symptom, index) => (
                   <li key={index}>{symptom}</li>
                 ))}
@@ -59,12 +59,12 @@ const Prediction = () => {
             </div>
 
             <div className="mb-6">
-              <p className="text-lg font-semibold text-gray-800 mb-2">Treatment:</p>
-              <p className="text-gray-700">{treatment}</p>
+              <p className="text-lg font-semibold text-green-400 mb-2">Treatment:</p>
+              <p className="text-gray-300">{treatment}</p>
             </div>
           </CardContent>
 
-          <CardFooter className="text-sm text-gray-500 text-center">
+          <CardFooter className="text-sm text-gray-400 text-center">
             <p>
               Please seek medical attention if symptoms persist or worsen.
             </p>
