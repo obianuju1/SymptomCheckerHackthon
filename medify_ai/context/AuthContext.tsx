@@ -35,25 +35,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
     const pathname = usePathname();
-    const excludedPaths = ['/auth/register', '/']; // excluded paths
+    const excludedPaths = ['/auth/register', '/','/symptoms','/confirmation']; // excluded paths
 
     // Check if the user is signed in on mount
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            if (excludedPaths.includes(pathname)) {
-                return; // Do not redirect if on excluded paths
-            }
+    // useEffect(() => {
+    //     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    //         if (excludedPaths.includes(pathname)) {
+    //             return; // Do not redirect if on excluded paths
+    //         }
 
-            setUser(currentUser);
-            if (currentUser) {
-                router.push("/dashboard");
-            } else {
-                router.push("/auth/login");
-            }
-        });
+    //         setUser(currentUser);
+    //         if (currentUser) {
+    //             router.push("/dashboard");
+    //         } else {
+    //             router.push("/auth/login");
+    //         }
+    //     });
 
-        return () => unsubscribe(); // Clean up the subscription
-    }, [pathname, router]);
+    //     return () => unsubscribe(); // Clean up the subscription
+    // }, [pathname, router]);
 
     // User Registration
     const signUp = async (first_name: string, last_name: string, email: string, password: string) => {
