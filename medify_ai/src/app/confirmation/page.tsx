@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";  // Import from next/navigation instead of next/router
+import { useSearchParams } from "next/navigation"; // Import from next/navigation instead of next/router
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -38,20 +38,22 @@ export default function ConfirmationPage() {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center ">
-      <div className="relative w-80 p-4 bg-white">
-        <h1 className="text-xl font-semibold mb-4 text-center">Confirm Selected Symptoms</h1>
+    <div className="w-screen h-screen bg-[#1F2327] text-white flex justify-center items-center py-12 px-4">
+      <div className="relative w-80 p-4 bg-[#2A2F36] rounded-lg shadow-xl">
+        <h1 className="text-xl font-semibold mb-4 text-center text-green-400">
+          Confirm Selected Symptoms
+        </h1>
 
         {selectedOptions.length > 0 ? (
-          <div className="mb-4 max-h-60 overflow-y-auto">  {/* Set max height and enable scroll */}
+          <div className="mb-4 max-h-60 overflow-y-auto"> {/* Set max height and enable scroll */}
             {selectedOptions.map((option) => (
               <div
                 key={option.value}
-                className="flex items-center justify-between mb-2 rounded-lg border border-gray-300 p-2"
+                className="flex items-center justify-between mb-2 rounded-lg border border-[#444C57] p-2 bg-[#333B44]"
               >
-                <span className="text-sm text-gray-800">{option.label}</span>
+                <span className="text-sm text-gray-300">{option.label}</span>
                 <button
-                  className="ml-2 text-xs text-gray-800 hover:text-red-500"
+                  className="ml-2 text-xs text-gray-300 hover:text-red-500"
                   onClick={() => removeSelectedOption(option)}
                 >
                   &times;
@@ -63,7 +65,7 @@ export default function ConfirmationPage() {
           <p className="text-sm text-gray-500">No symptoms selected</p>
         )}
 
-        <Button onClick={handleFinalSubmit} className="w-full">
+        <Button onClick={handleFinalSubmit} className="w-full bg-green-500 hover:bg-green-600 text-white">
           Submit
         </Button>
       </div>
