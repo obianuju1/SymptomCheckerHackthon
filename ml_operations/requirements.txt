@@ -1,1 +1,10 @@
 # add requirements for python virtual environment here 
+Flask
+scikit-learn
+pandas
+numpy
+matplotlib
+seaborn
+lightgbm
+catboost
+xgboost
