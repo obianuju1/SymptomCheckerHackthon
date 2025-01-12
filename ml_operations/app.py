@@ -2,6 +2,15 @@ from flask import Flask, request, jsonify, render_template
 import pickle
 import pandas as pd
 from flask_cors import CORS
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate('/Users/obianujuenekebe/SymptomCheckerHackthon/ml_operations/medifyAccountKey.json')  # Replace with your key's path
+firebase_admin.initialize_app(cred)
+
+# Initialize Firestore client
+db = firestore.client()
 
 
 app = Flask(__name__)
@@ -54,31 +63,40 @@ expected_features = [
     "sweating", "itching", "joint_pain", "chest_pain", "malaise", "skin_rash", "chills", "yellowing_of_eyes", 
     "yellowish_skin", "abdominal_pain", "headache", "nausea", "loss_of_appetite", "high_fever", "vomiting", "fatigue"
 ]
-
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         # Get input data as JSON
         data = request.get_json()
-        print("Received data:", data)  # Add this line to debug
+        print("Raw input data:", data)  # Debug input
         
-        # Convert the data to DataFrame
-        input_df = pd.DataFrame([data])  # Ensure data is wrapped in a list (as DataFrame expects)
+        # Extract scalar values from lists
+        valid_data = {key: value[0] if isinstance(value, list) and len(value) > 0 else value for key, value in data.items()}
         
-        # Ensure the input data has the correct number of columns
-        input_df = input_df.reindex(columns=expected_features, fill_value=0)
-        print("Processed DataFrame:", input_df)  # Print the DataFrame to verify it's correct
+        # Ensure all expected features are present
+        filtered_data = {key: valid_data.get(key, 0) for key in expected_features}
         
-        # Make prediction (numeric label)
+        # Convert to DataFrame
+        input_df = pd.DataFrame([filtered_data]).reindex(columns=expected_features, fill_value=0)
+        print("Processed DataFrame:\n", input_df)  # Debug DataFrame
+
+        # Make prediction
         prediction = model.predict(input_df)
-        predicted_disease = le.inverse_transform(prediction)
-        # send to the firebase dtatabse
+        predicted_disease = le.inverse_transform(prediction)[0]
+
+        # Store prediction in Firestore
+        doc_ref = db.collection('predictions').add({
+            'input_data': filtered_data,
+            'predicted_disease': predicted_disease
+        })
+
         # Return the prediction
-        return jsonify({'prediction': predicted_disease[0]})
+        return jsonify({'prediction': predicted_disease})
 
     except Exception as e:
-        print("Error:", str(e))  # Print out any errors for debugging
+        print("Error:", str(e))  # Debug the error
         return jsonify({'error': str(e)})
+
 
 
 if __name__ == '__main__':
