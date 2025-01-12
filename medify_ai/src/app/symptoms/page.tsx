@@ -5,24 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSearchParams, useRouter } from "next/navigation"; // Import useSearchParams from next/navigation
+import { symptoms } from "@/app/data/symptomsData"; // Import the symptom data
 
 type Option = {
   label: string;
   value: string;
 };
-
-const options: Option[] = [
-  { label: "Symptom 1", value: "symptom1" },
-  { label: "Symptom 2", value: "symptom2" },
-  { label: "Symptom 3", value: "symptom3" },
-  { label: "Symptom 4", value: "symptom4" },
-  { label: "Symptom 5", value: "symptom5" },
-  { label: "Symptom 6", value: "symptom6" },
-  { label: "Symptom 7", value: "symptom7" },
-  { label: "Symptom 8", value: "symptom8" },
-  { label: "Symptom 9", value: "symptom9" },
-  { label: "Symptom 10", value: "symptom10" },
-];
 
 export default function DropdownSearchSelect() {
   const [selectedOptions, setSelectedOptions] = useState<Option[]>([]);
@@ -46,7 +34,7 @@ export default function DropdownSearchSelect() {
   };
 
   // Filter options based on search query
-  const filteredOptions = options.filter((option) =>
+  const filteredOptions = symptoms.filter((option: Option) =>
     option.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -57,9 +45,15 @@ export default function DropdownSearchSelect() {
 
   // Handle form submission and pass selected options to confirmation page
   const handleSubmit = () => {
+    // Create the request payload, mapping the selected options to the model's expected format
+    const payload = symptoms.reduce((acc: { [key: string]: number[] }, option: Option) => {
+      acc[option.value] = selectedOptions.some((selected) => selected.value === option.value) ? [1] : [0];
+      return acc;
+    }, {});
+
     // Create the query string
     const queryParams = new URLSearchParams();
-    queryParams.set("symptoms", JSON.stringify(selectedOptions));
+    queryParams.set("symptoms", JSON.stringify(payload));
   
     // Use router.push to navigate with the query string
     router.push(`/confirmation?${queryParams.toString()}`);
@@ -106,7 +100,7 @@ export default function DropdownSearchSelect() {
         {isDropdownOpen && (
           <div className="w-full bg-[#2A2F36] border border-[#444C57] rounded-md shadow-lg mt-1 max-h-40 overflow-y-auto mb-4">
             <ul>
-              {filteredOptions.map((option) => (
+              {filteredOptions.map((option: Option) => (
                 <li
                   key={option.value}
                   className="flex items-center justify-between p-2 hover:bg-[#333B44] cursor-pointer"

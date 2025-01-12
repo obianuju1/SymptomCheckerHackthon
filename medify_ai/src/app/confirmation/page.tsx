@@ -1,6 +1,5 @@
 "use client";
-
-import { useSearchParams } from "next/navigation"; // Import from next/navigation instead of next/router
+import { useSearchParams, useRouter } from "next/navigation"; // Import useRouter from next/navigation
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -12,14 +11,19 @@ type Option = {
 export default function ConfirmationPage() {
   const searchParams = useSearchParams(); // Use the new hook to get search params
   const [selectedOptions, setSelectedOptions] = useState<Option[]>([]);
+  const router = useRouter(); // Initialize useRouter for navigation
 
-  // When component mounts and query is available, parse the symptoms
+  // When the component mounts and query is available, parse the symptoms
   useEffect(() => {
     const symptomsParam = searchParams.get("symptoms");  // Get the symptoms query parameter
     if (symptomsParam) {
       try {
-        const symptoms = JSON.parse(symptomsParam) || [];
-        setSelectedOptions(symptoms);
+        const symptoms = JSON.parse(symptomsParam); // Parse the symptoms param
+        const selectedSymptoms = Object.keys(symptoms)
+          .filter((key) => symptoms[key][0] === 1) // Filter for symptoms that were selected (1)
+          .map((key) => ({ label: key, value: key })); // Map the keys to label-value pairs
+        
+        setSelectedOptions(selectedSymptoms); // Update state with selected symptoms
       } catch (error) {
         console.error("Failed to parse symptoms:", error);
       }
@@ -31,11 +35,35 @@ export default function ConfirmationPage() {
     setSelectedOptions(selectedOptions.filter((selected) => selected.value !== option.value));
   };
 
-  // Handle final submission
-  const handleFinalSubmit = () => {
-    console.log("Final selected symptoms:", selectedOptions);
-    // You can now do something with the selected symptoms, like saving them to the server
-  };
+  // Handle final submission and navigate to predictions page
+  // ConfirmationPage Component
+const handleFinalSubmit = () => {
+  console.log("Final selected symptoms:", selectedOptions);
+
+  // Create the request payload
+  const payload = selectedOptions.reduce<Record<string, number>>((acc, option) => {
+    acc[option.value] = 1; // Set selected symptoms to 1
+    return acc;
+  }, {});
+
+  // Make the fetch request
+  fetch('http://127.0.0.1:5000/predict', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log('Prediction:', data.prediction);
+      // Pass the disease and selected symptoms to the predictions page via URL query parameters
+      const symptomsParam = JSON.stringify(payload);  // Convert symptoms payload to a string
+      router.push(`/prediction?disease=${data.prediction}&symptoms=${encodeURIComponent(symptomsParam)}`);  // Pass both disease and symptoms
+    })
+    .catch((error) => console.error('Error:', error));
+};
+
 
   return (
     <div className="w-screen h-screen bg-[#1F2327] text-white flex justify-center items-center py-12 px-4">
