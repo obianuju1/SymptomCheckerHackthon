@@ -16,10 +16,9 @@ const Content = () => {
     <Table className=" table-auto w-full mt-0 mb-2 mx-auto">
   <TableHeader>
     <TableRow>
-      <TableHead className="w-[100px]">Description</TableHead>
-      <TableHead>Status</TableHead>
-      <TableHead>Method</TableHead>
-      <TableHead className="text-right">Amount</TableHead>
+      <TableHead className="w-[100px]">Disease</TableHead>
+      <TableHead>symptoms</TableHead>
+      <TableHead>time created</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
