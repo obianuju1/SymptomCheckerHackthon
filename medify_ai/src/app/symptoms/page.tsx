@@ -1,11 +1,11 @@
-"use client";
-
+"use client"
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSearchParams, useRouter } from "next/navigation"; // Import useSearchParams from next/navigation
 import { symptoms } from "@/app/data/symptomsData"; // Import the symptom data
+import { v4 as uuidv4 } from 'uuid'; // Import the uuid function
 
 type Option = {
   label: string;
@@ -35,7 +35,7 @@ export default function DropdownSearchSelect() {
 
   // Filter options based on search query
   const filteredOptions = symptoms.filter((option: Option) =>
-    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    option.label.toLowerCase().includes(searchQuery.toLowerCase())  // Case-insensitive search
   );
 
   // Handle clear selected option
@@ -54,6 +54,7 @@ export default function DropdownSearchSelect() {
     // Create the query string
     const queryParams = new URLSearchParams();
     queryParams.set("symptoms", JSON.stringify(payload));
+    console.log(payload)
   
     // Use router.push to navigate with the query string
     router.push(`/confirmation?${queryParams.toString()}`);
@@ -81,7 +82,7 @@ export default function DropdownSearchSelect() {
             <span className="text-sm text-gray-500">Selected: </span>
             {selectedOptions.map((option) => (
               <span
-                key={option.value}
+                key={uuidv4()}  // Generate a unique UUID for each selected option
                 className="inline-block bg-[#333B44] text-gray-300 text-xs py-1 px-3 rounded-lg mr-2 mb-2"
               >
                 {option.label}{" "}
@@ -102,7 +103,7 @@ export default function DropdownSearchSelect() {
             <ul>
               {filteredOptions.map((option: Option) => (
                 <li
-                  key={option.value}
+                  key={option.value}  // Use unique value as key
                   className="flex items-center justify-between p-2 hover:bg-[#333B44] cursor-pointer"
                   onClick={() => toggleOption(option)}
                 >

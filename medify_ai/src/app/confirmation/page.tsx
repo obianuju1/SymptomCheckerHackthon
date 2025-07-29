@@ -2,6 +2,8 @@
 import { useSearchParams, useRouter } from "next/navigation"; // Import useRouter from next/navigation
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "../../../context/AuthContext";
+import { string } from "zod";
 
 type Option = {
   label: string;
@@ -12,6 +14,8 @@ export default function ConfirmationPage() {
   const searchParams = useSearchParams(); // Use the new hook to get search params
   const [selectedOptions, setSelectedOptions] = useState<Option[]>([]);
   const router = useRouter(); // Initialize useRouter for navigation
+  const {user} = useAuth()
+  const userId = user?.uid // get the user id from the use auth 
 
   // When the component mounts and query is available, parse the symptoms
   useEffect(() => {
@@ -41,10 +45,15 @@ const handleFinalSubmit = () => {
   console.log("Final selected symptoms:", selectedOptions);
 
   // Create the request payload
-  const payload = selectedOptions.reduce<Record<string, number>>((acc, option) => {
+  const payload = selectedOptions.reduce<Record<string, number | string>>((acc, option) => {
     acc[option.value] = 1; // Set selected symptoms to 1
     return acc;
   }, {});
+  if(payload.userId){
+    payload.userId = String(userId)
+  }
+  
+
 
   // Make the fetch request
   fetch('http://127.0.0.1:5000/predict', {
@@ -56,7 +65,7 @@ const handleFinalSubmit = () => {
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log('Prediction:', data.prediction);
+      console.log('Prediction:', data.prediced_disease);
       // Pass the disease and selected symptoms to the predictions page via URL query parameters
       const symptomsParam = JSON.stringify(payload);  // Convert symptoms payload to a string
       router.push(`/prediction?disease=${data.prediction}&symptoms=${encodeURIComponent(symptomsParam)}`);  // Pass both disease and symptoms

@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const login = async (email: string, password: string) => {
         try {
             const userCredentials = await signInWithEmailAndPassword(auth, email, password);
+            console.log(userCredentials.user)
             setUser(userCredentials.user); // Set the logged-in user
             router.push("/dashboard"); // Redirect to dashboard after login
             return userCredentials.user;
