@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { useState,useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../../../../context/AuthContext";
 
 // Define your Zod schema for validation
@@ -41,19 +41,27 @@ const formSchema = z.object({
 
 
 const Page = () => {
-    const [isClient, setIsClient] = useState(false); // State to track client-side rendering
+
     const {signUp} = useAuth()
 
     
-function onSubmit(values: z.infer<typeof formSchema>) {
-  console.log(values);
-  // send sign-up info to the provider
-  signUp(values.first_name, values.last_name, values.email, values.password)
+const [isSubmitting, setIsSubmitting] = useState(false);
+const [error, setError] = useState<string | null>(null);
+
+async function onSubmit(values: z.infer<typeof formSchema>) {
+  setIsSubmitting(true);
+  setError(null);
+  
+  try {
+    await signUp(values.first_name, values.last_name, values.email, values.password);
+          } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create account. Please try again.';
+      setError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
 }
-  // useEffect to set isClient to true after the component mounts
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
+
     // Set up the form hook with validation and default values
 const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,7 +76,7 @@ const form = useForm<z.infer<typeof formSchema>>({
     <AuthLayout>
         <CardContent>
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-3">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 p-3 sm:p-4">
         <CardTitle className="text-2xl font-bold text-center mb-4">Sign Up</CardTitle>
           <FormField
             control={form.control}
@@ -130,7 +138,18 @@ const form = useForm<z.infer<typeof formSchema>>({
             )}
           />
 
-          <Button type="submit" className="block w-full bg-green-500 hover:bg-green-500">Submit</Button>
+          {error && (
+            <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+              {error}
+            </div>
+          )}
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="block w-full bg-green-500 hover:bg-green-500"
+          >
+            {isSubmitting ? 'Creating Account...' : 'Submit'}
+          </Button>
         </form>
       </Form>
         </CardContent>

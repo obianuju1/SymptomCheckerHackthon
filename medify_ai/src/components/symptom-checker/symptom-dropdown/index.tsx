@@ -3,104 +3,134 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import DropdownList from "./dropdown-list";
-import React, { useState,useEffect,useRef } from "react";
-import axios from "axios";
-
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useSymptoms } from "./hooks";
 
 
 const SymptomDropdown = () => {
-    const [inputValue,setInputValue] = useState<string>('') 
-    const [dropdownDisplay,setDropdownDisplay] = useState<boolean>(false) // determines wether dropdown is displayed
-    const [selectedOptions,setSelectedOptions] = useState<string[]>([]) // shoes which options have been selected
-    const [symptoms,setSymptoms] = useState<string[]>([]) // symptoms rendered on mount
-    const [displayOptions,setDisplayOptions] = useState<{label: string, value: string}[]>([]) // key is the formatted val is the data value
-    const dropdownRef = useRef<HTMLDivElement>(null)
+    const [inputValue, setInputValue] = useState<string>('');
+    const [dropdownDisplay, setDropdownDisplay] = useState<boolean>(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
     
-    useEffect(() => {
-        const getSymptoms = async () => {
+    const {
+        displayOptions,
+        selectedOptions,
+        isLoading,
+        error,
+        addSymptom,
+        submitSymptoms
+    } = useSymptoms();
 
-            const res = await axios.get('http://127.0.0.1:8000/symptoms') // replace with url
-            const raw = res.data.symptoms
-            setSymptoms(raw)
-            setDisplayOptions(
-                raw.map((symptom: string) => (
-                    {label: symptom.replaceAll('_',' '), value: symptom }
-                ))
-                
-            )
-        }
-
-        getSymptoms()
-
-    },[])
-
+    // Click outside handler
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if(dropdownRef && !dropdownRef.current?.contains(event.target as Node)){
-                setDropdownDisplay(false)
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setDropdownDisplay(false);
             }
-        }
+        };
 
-        document.addEventListener('mousedown',handleClickOutside)
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputValue(e.target.value);
+    };
+
+    const handleSymptomSelect = (symptom: string) => {
+        addSymptom(symptom);
+        setInputValue(''); // Clear input after selection
+        setDropdownDisplay(false);
+    };
+
+    // Memoized filtered options with improved sorting
+    const filteredOptions = useMemo(() => {
+        if (!inputValue.trim()) return displayOptions;
         
-        return () => {
-            document.removeEventListener('mousedown',handleClickOutside) 
-        }
-    })
-
-    const handleInputChange = (e) => {
-        // input change sets the state to the current input 
-        setInputValue(e.target.value)
-    }
-
-    const handleSubmit = async () => {
-        // fucntion to handle the submission logic send submission 
-        try {
-            await axios.post('http://127.0.0.1:8000/predict',{
-                symptoms: selectedOptions
-            })
-            console.log('succesfull post')
-            // add possible novigation to the results after 
-        } catch (error) {
-            console.error(error)
-        }
+        const inputLower = inputValue.toLowerCase().trim();
         
-    }
+        return displayOptions
+            .filter((option) => 
+                option.label.toLowerCase().includes(inputLower)
+            )
+            .sort((a, b) => {
+                const aLabel = a.label.toLowerCase();
+                const bLabel = b.label.toLowerCase();
+                
+                const aStarts = aLabel.startsWith(inputLower);
+                const bStarts = bLabel.startsWith(inputLower);
+                
+                if (aStarts && !bStarts) return -1;
+                if (bStarts && !aStarts) return 1;
+                
+                return aLabel.localeCompare(bLabel);
+            });
+    }, [displayOptions, inputValue]);
 
-    const filteredOptions = displayOptions.filter((option) => option.label.toLowerCase().trim()
-    .includes(inputValue)).sort((a,b) => {
-        const inputLower = inputValue.toLowerCase().trim()
-        
-        const aLabel = a.label.toLowerCase()
-        const bLabel = b.label.toLowerCase()
+    return (
+        <Card className="w-full max-w-md mx-auto">
+            <CardHeader>
+                <h3 className="text-lg font-semibold">Select Your Symptoms</h3>
+                <p className="text-sm text-muted-foreground">
+                    Choose the symptoms that are bothering you
+                </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="relative" ref={dropdownRef}>
+                    <Input
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        onFocus={() => setDropdownDisplay(true)}
+                        placeholder="Search symptoms..."
+                        className="w-full"
+                    />
+                    
+                    {dropdownDisplay && (
+                        <div className="absolute top-full left-0 right-0 z-10 mt-1">
+                            <DropdownList
+                                filteredOptions={filteredOptions}
+                                onSelect={handleSymptomSelect}
+                                selectedOptions={selectedOptions}
+                                isLoading={isLoading}
+                            />
+                        </div>
+                    )}
+                </div>
 
-        const aStarts = aLabel.startsWith(inputLower) // return true/false if a starts with the curent input value
-        const bStarts = bLabel.startsWith(inputLower) // return true/false if b starts with the current input value
+                {/* Selected Symptoms Display */}
+                {selectedOptions.length > 0 && (
+                    <div className="space-y-2">
+                        <h4 className="text-sm font-medium">Selected Symptoms:</h4>
+                        <div className="flex flex-wrap gap-2">
+                            {selectedOptions.map((symptom) => (
+                                <span
+                                    key={symptom}
+                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary text-primary-foreground"
+                                >
+                                    {symptom.replaceAll('_', ' ')}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
-        if(aStarts && !bStarts) return -1 // return -1 if a starts with the current input value and a dosent 
-        if(bStarts && !aStarts) return 1  // return 1 if b starts with the input value and a dosent
+                {/* Error Display */}
+                {error && (
+                    <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                        {error}
+                    </div>
+                )}
 
-        return aLabel.localeCompare(bLabel)
-
-    })
-  
-
-    
-  return (
-    <Card>
-        <CardHeader>Please Select Any Symproms Bothering You</CardHeader>
-        <CardContent>
-        <Input onChange={handleInputChange} 
-            onFocus={() => {setDropdownDisplay(true)}}/>
-            <div ref={dropdownRef}>
-            {dropdownDisplay && 
-            <DropdownList updateSelection={setSelectedOptions} 
-            selectedOptions={selectedOptions} filteredOptions={filteredOptions} />}
-            </div>
-            <Button onClick={handleSubmit}>Get Diagnoses</Button>
-        </CardContent>
-    </Card>
-  );
+                <Button 
+                    onClick={submitSymptoms}
+                    disabled={isLoading || selectedOptions.length === 0}
+                    className="w-full"
+                >
+                    {isLoading ? 'Processing...' : 'Get Diagnosis'}
+                </Button>
+            </CardContent>
+        </Card>
+    );
 };
 
 export default SymptomDropdown;

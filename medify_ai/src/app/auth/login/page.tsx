@@ -5,14 +5,13 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect, useState } from "react";
 
-import { toast } from "@/components/hooks/use-toast";
+
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import AuthLayout from "../authLayout";
-import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
+import { CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { useContext } from "react";
 import { useAuth} from "../../../../context/AuthContext";
 // Validation schema with Zod
 const FormSchema = z.object({
@@ -45,27 +44,20 @@ export default function Login() {
     },
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Form submit handler
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-
-
-    });
+    setIsSubmitting(true);
+    setLoginError("");
 
     try {
-      await login(data.email,data.password)
+      await login(data.email, data.password);
     } catch (error: any) {
-      console.log(error.message)
-      setLoginError(error.message)
+      setLoginError(error.message || 'Failed to login. Please check your credentials.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    
   }
 
   if (!isClient) {
@@ -124,8 +116,12 @@ export default function Login() {
           />
 
           {/* Submit Button */}
-          <Button type="submit" className="w-40 bg-green-500 hover:bg-green-500">
-            Login
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="w-40 bg-green-500 hover:bg-green-500"
+          >
+            {isSubmitting ? 'Logging in...' : 'Login'}
           </Button>
         </form>
       </Form>
