@@ -3,11 +3,23 @@ from pydantic import BaseModel
 import joblib
 import pandas as pd 
 import numpy as np 
+from fastapi.middleware.cors import CORSMiddleware
 
 class Symptoms(BaseModel):
     symptoms: list[str]
 
 app = FastAPI()
+
+origin = 'http://localhost:3000'
+
+# add cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origin,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # load the model and data and encoder 
 model,le = joblib.load('/Users/jroyarekhua/SymptomCheckerHackthon/ml_operations/models/baseline_lrg.pkl')
@@ -18,7 +30,7 @@ data = pd.read_csv('/Users/jroyarekhua/SymptomCheckerHackthon/ml_operations/data
 # get the data from the columns 
 model_symptoms = data.columns.to_list()
 model_symptoms.remove('disease')
-print(model_symptoms)
+
 
 @app.get("/predict") 
 async def Root():
@@ -35,11 +47,20 @@ async def post_predictions(Symptoms: Symptoms):
     
     try:
         encoded = encode(Symptoms.symptoms)
-        prediction = model.predict(encoded)
-        decoded = le.inverse_transform(prediction)
+        prediction = model.predict(encoded) # most likely class index
+        proba = model.predict_proba(encoded) # confidence level of each class
+        confidence = float(max(proba[0]))
+        decoded = le.inverse_transform(prediction) # map index back to correct label
     except Exception as e:
         raise HTTPException(status_code=500,detail=f'internal server error {e}')
-    return {'predictions' : decoded[0] }
+    return {'prediction' : decoded[0],
+            'confidence' : confidence
+            }
+
+@app.get('/symptoms',status_code=200)
+async def getSymptoms():
+    print('route hit')
+    return {'symptoms': model_symptoms}
    
 
 

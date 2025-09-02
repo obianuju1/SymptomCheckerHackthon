@@ -3,11 +3,16 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import DropdownList from "./dropdown-list";
+import Chip from "./chip";
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useSymptoms } from "./hooks";
+import { useSymptoms, DiagnosisResults } from "@/hooks/use-symptoms";
+
+interface SymptomDropdownProps {
+  onSubmission?: (results: DiagnosisResults) => void;
+}
 
 
-const SymptomDropdown = () => {
+const SymptomDropdown = ({ onSubmission }: SymptomDropdownProps) => {
     const [inputValue, setInputValue] = useState<string>('');
     const [dropdownDisplay, setDropdownDisplay] = useState<boolean>(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -16,8 +21,8 @@ const SymptomDropdown = () => {
         displayOptions,
         selectedOptions,
         isLoading,
-        error,
         addSymptom,
+        removeSymptom,
         submitSymptoms
     } = useSymptoms();
 
@@ -68,25 +73,25 @@ const SymptomDropdown = () => {
     }, [displayOptions, inputValue]);
 
     return (
-        <Card className="w-full max-w-md mx-auto">
-            <CardHeader>
-                <h3 className="text-lg font-semibold">Select Your Symptoms</h3>
-                <p className="text-sm text-muted-foreground">
+        <Card className="w-full max-w-md mx-auto pt-8">
+            <CardHeader className="text-center pb-6">
+                <h3 className="text-2xl sm:text-3xl font-bold text-center mb-2 bg-gradient-to-r from-green-400 via-green-500 to-green-600 bg-clip-text text-transparent">Select Your Symptoms</h3>
+                <p className="text-base sm:text-lg text-muted-foreground text-center">
                     Choose the symptoms that are bothering you
                 </p>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
                 <div className="relative" ref={dropdownRef}>
                     <Input
                         value={inputValue}
                         onChange={handleInputChange}
                         onFocus={() => setDropdownDisplay(true)}
-                        placeholder="Search symptoms..."
-                        className="w-full"
+                        placeholder="Type to search symptoms..."
+                        className="form-input w-full"
                     />
                     
-                    {dropdownDisplay && (
-                        <div className="absolute top-full left-0 right-0 z-10 mt-1">
+                    {dropdownDisplay && filteredOptions.length > 0 && (
+                        <div className=" mt-1">
                             <DropdownList
                                 filteredOptions={filteredOptions}
                                 onSelect={handleSymptomSelect}
@@ -99,32 +104,32 @@ const SymptomDropdown = () => {
 
                 {/* Selected Symptoms Display */}
                 {selectedOptions.length > 0 && (
-                    <div className="space-y-2">
-                        <h4 className="text-sm font-medium">Selected Symptoms:</h4>
+                    <div className="space-y-3">
                         <div className="flex flex-wrap gap-2">
                             {selectedOptions.map((symptom) => (
-                                <span
+                                <Chip
                                     key={symptom}
-                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary text-primary-foreground"
-                                >
-                                    {symptom.replaceAll('_', ' ')}
-                                </span>
+                                    label={symptom}
+                                    onRemove={() => removeSymptom(symptom)}
+                                />
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* Error Display */}
-                {error && (
-                    <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-                        {error}
-                    </div>
-                )}
+
 
                 <Button 
-                    onClick={submitSymptoms}
+                    onClick={async () => {
+                        try {
+                            const results = await submitSymptoms();
+                            onSubmission?.(results);
+                        } catch (error) {
+                            console.error('Error submitting symptoms:', error);
+                        }
+                    }}
                     disabled={isLoading || selectedOptions.length === 0}
-                    className="w-full"
+                    className="form-button w-full bg-green-500 hover:bg-green-600 text-base font-medium"
                 >
                     {isLoading ? 'Processing...' : 'Get Diagnosis'}
                 </Button>

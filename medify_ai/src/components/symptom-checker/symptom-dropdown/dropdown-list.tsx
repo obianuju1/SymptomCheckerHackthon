@@ -16,24 +16,17 @@ const DropdownList = ({
     selectedOptions, 
     isLoading = false 
 }: DropdownListProps) => {
+    // Log errors to console for debugging
     if (isLoading) {
-        return (
-            <div className="p-4 text-center text-muted-foreground">
-                Loading symptoms...
-            </div>
-        );
+        console.log('Dropdown: Loading symptoms...');
     }
-
-    if (filteredOptions.length === 0) {
-        return (
-            <div className="p-4 text-center text-muted-foreground">
-                No symptoms found
-            </div>
-        );
+    
+    if (filteredOptions.length === 0 && !isLoading) {
+        console.warn('Dropdown: No symptoms available or found');
     }
 
     return (
-        <div className="max-h-60 overflow-y-auto border rounded-md bg-background">
+        <div className="max-h-40 overflow-y-auto border rounded-md bg-background">
             {filteredOptions.map((option) => {
                 const isSelected = selectedOptions.includes(option.value);
                 

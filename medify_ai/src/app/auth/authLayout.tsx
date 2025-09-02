@@ -8,8 +8,8 @@ export default function AuthLayout({
     return (
      
        
-          <main className="flex justify-center items-center h-screen w-full bg-main-image bg-cover bg-center bg-blend-darken bg-no-repeat min-h-screen">
-            <Card className=" w-2/3 bg-black/80 text-white border-none p-1">
+          <main className="flex justify-center items-center min-h-screen w-full bg-">
+            <Card className=" w-2/3 bg-transparent text-white border-none p-1 relative z-10">
                 {children}
             </Card>
           </main>

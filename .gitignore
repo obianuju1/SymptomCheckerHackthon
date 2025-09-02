@@ -171,3 +171,6 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 ml_operations/medifyAccountKey.json
+
+# medify account key
+ml_operations/medifyacc.json

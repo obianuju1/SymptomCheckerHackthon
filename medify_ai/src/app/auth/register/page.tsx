@@ -76,16 +76,16 @@ const form = useForm<z.infer<typeof formSchema>>({
     <AuthLayout>
         <CardContent>
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 p-3 sm:p-4">
-        <CardTitle className="text-2xl font-bold text-center mb-4">Sign Up</CardTitle>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col items-center spacing-section w-full justify-center">
+        <CardTitle className="text-center mb-4 text-heading-gradient">Sign Up</CardTitle>
           <FormField
             control={form.control}
             name="first_name"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John" {...field} />
+                  <Input placeholder="John" {...field} className="form-input w-full" />
                 </FormControl>
                 <FormDescription>Enter your first name.</FormDescription>
                 <FormMessage />
@@ -97,10 +97,10 @@ const form = useForm<z.infer<typeof formSchema>>({
             control={form.control}
             name="last_name"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Doe" {...field} />
+                  <Input placeholder="Doe" {...field} className="form-input w-full" />
                 </FormControl>
                 <FormDescription>Enter your last name.</FormDescription>
                 <FormMessage />
@@ -112,10 +112,10 @@ const form = useForm<z.infer<typeof formSchema>>({
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="example@email.com" {...field} />
+                  <Input placeholder="example@email.com" {...field} className="form-input w-full" />
                 </FormControl>
                 <FormDescription>Enter your email address.</FormDescription>
                 <FormMessage />
@@ -127,10 +127,10 @@ const form = useForm<z.infer<typeof formSchema>>({
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="Password" {...field} />
+                  <Input type="password" placeholder="Password" {...field} className="form-input w-full" />
                 </FormControl>
                 <FormDescription>Enter a strong password.</FormDescription>
                 <FormMessage />
@@ -146,7 +146,7 @@ const form = useForm<z.infer<typeof formSchema>>({
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="block w-full bg-green-500 hover:bg-green-500"
+            className="form-button w-full bg-green-500 hover:bg-green-600"
           >
             {isSubmitting ? 'Creating Account...' : 'Submit'}
           </Button>

@@ -1,13 +1,12 @@
 'use client'
 import React from "react";
-import DesktopNav from "./desktop/DesktopNav";
 import List from "./list";
 import MobileNav from "./mobile/MobileNav";
-import { SidebarProvider } from "../ui/sidebar";
 import DashboardMap from "./DashboardMap";
 import { Card } from "../ui/card";
 import { useMobile } from "@/hooks/use-mobile";
 import { useGeolocation } from "@/hooks/use-geolocation";
+import DashboardNavigation from "./DashboardNavigation";
 
 const Dashboard = () => {
   const isMobile = useMobile();
@@ -34,22 +33,16 @@ const Dashboard = () => {
   if (isMobile) {
     return (
     <>
-     <MobileNav />
+     <MobileNav>
+        <DashboardNavigation />
+     </MobileNav>
+      
      {content}
     </>
     )    
   }
 
-  return (
-    <SidebarProvider>
-      <DesktopNav />
-      {content}
-    </SidebarProvider>
-
-    
-    
-    
-  )
+  return content
 };
 
 export default Dashboard;

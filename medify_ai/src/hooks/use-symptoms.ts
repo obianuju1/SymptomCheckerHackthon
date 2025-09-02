@@ -7,16 +7,24 @@ export interface SymptomOption {
   value: string;
 }
 
+export interface DiagnosisResults {
+  Precautions: string[];
+  Disease: string;
+  Description: string;
+  Disease_Normalized: string;
+  Confidence: number;
+}
+
 export interface UseSymptomsReturn {
   symptoms: string[];
   displayOptions: SymptomOption[];
   selectedOptions: string[];
   isLoading: boolean;
-  error: string | null;
   setSelectedOptions: (symptoms: string[]) => void;
   addSymptom: (symptom: string) => void;
   removeSymptom: (symptom: string) => void;
-  submitSymptoms: () => Promise<void>;
+  submitSymptoms: () => Promise<DiagnosisResults>;
+  fetchSymptoms: () => Promise<void>;
 }
 
 export const useSymptoms = (): UseSymptomsReturn => {
@@ -24,84 +32,81 @@ export const useSymptoms = (): UseSymptomsReturn => {
   const [displayOptions, setDisplayOptions] = useState<SymptomOption[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const fetchSymptoms = useCallback(async () => {
+    setIsLoading(true);
+    
+    try {
+      const response = await axios.get(API_ENDPOINTS.SYMPTOMS);
+      const rawSymptoms = response.data.symptoms;
+      
+      setSymptoms(rawSymptoms);
+      setDisplayOptions(
+        rawSymptoms.map((symptom: string) => ({
+          label: symptom.replaceAll('_', ' '),
+          value: symptom
+        }))
+      );
+    } catch (err) {
+      console.error('Error fetching symptoms:', err);
+      throw new Error('Failed to load symptoms. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Fetch symptoms on mount
   useEffect(() => {
-    const fetchSymptoms = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const response = await axios.get(API_ENDPOINTS.SYMPTOMS);
-        const rawSymptoms = response.data.symptoms;
-        
-        setSymptoms(rawSymptoms);
-        setDisplayOptions(
-          rawSymptoms.map((symptom: string) => ({
-            label: symptom.replaceAll('_', ' '),
-            value: symptom
-          }))
-        );
-      } catch (err) {
-        setError('Failed to load symptoms. Please try again.');
-        console.error('Error fetching symptoms:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSymptoms();
-  }, []);
+    fetchSymptoms().catch(console.error);
+  }, [fetchSymptoms]);
 
   const addSymptom = useCallback((symptom: string) => {
     if (selectedOptions.length >= APP_CONFIG.MAX_SYMPTOMS) {
-      setError(`You can only select up to ${APP_CONFIG.MAX_SYMPTOMS} symptoms.`);
-      return;
+      throw new Error(`You can only select up to ${APP_CONFIG.MAX_SYMPTOMS} symptoms.`);
     }
     
     if (!selectedOptions.includes(symptom)) {
       setSelectedOptions(prev => [...prev, symptom]);
-      setError(null);
     }
   }, [selectedOptions]);
 
   const removeSymptom = useCallback((symptom: string) => {
     setSelectedOptions(prev => prev.filter(s => s !== symptom));
-    setError(null);
   }, []);
 
   const submitSymptoms = useCallback(async () => {
     if (selectedOptions.length === 0) {
-      setError('Please select at least one symptom.');
-      return;
+      throw new Error('Please select at least one symptom.');
     }
 
     setIsLoading(true);
-    setError(null);
 
     try {
-      await axios.post(API_ENDPOINTS.PREDICT, {
+      const response = await axios.post(API_ENDPOINTS.PREDICT, {
         symptoms: selectedOptions
       });
+      console.log('Symptoms submitted successfully:', response.data);
+      return response.data;
       // Handle successful submission (navigation, etc.)
     } catch (err) {
-      setError('Failed to submit symptoms. Please try again.');
       console.error('Error submitting symptoms:', err);
+      throw new Error('Failed to submit symptoms. Please try again.');
     } finally {
       setIsLoading(false);
     }
   }, [selectedOptions]);
+
+
 
   return {
     symptoms,
     displayOptions,
     selectedOptions,
     isLoading,
-    error,
     setSelectedOptions,
     addSymptom,
     removeSymptom,
     submitSymptoms,
+    fetchSymptoms,
   };
 };

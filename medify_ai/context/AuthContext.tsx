@@ -34,8 +34,6 @@ export const useAuth = (): AuthContextType => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
-    const pathname = usePathname();
-    const excludedPaths = ['/auth/register', '/','/symptoms','/confirmation']; // excluded paths
 
     // Check if the user is signed in on mount
     // useEffect(() => {
@@ -73,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             setUser(user); // Update the user state
             console.log('pushing user to the dashboard....')
-            router.push("/dashboard"); // Redirect after successful sign-up
+            router.push("/home"); // Redirect after successful sign-up
         } catch (error: any) {
             console.error("SignUp Error:", error.message);
             throw new Error("Error registering user");
@@ -86,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const userCredentials = await signInWithEmailAndPassword(auth, email, password);
             console.log(userCredentials.user)
             setUser(userCredentials.user); // Set the logged-in user
-            router.push("/dashboard"); // Redirect to dashboard after login
+            router.push("/home"); // Redirect to dashboard after login
             return userCredentials.user;
         } catch (error: any) {
             console.error("Login Error:", error.message);

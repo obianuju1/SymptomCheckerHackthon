@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <header className="min-h-screen bg-center bg-cover bg-no-repeat bg-black/40 bg-blend-darken flex flex-col items-center justify-center text-white gap-4 sm:gap-6 px-4 sm:px-6 lg:px-8 bg-main-image">
+    <header className="w-screen h-screen bg-center bg-cover bg-no-repeat bg-black/40 bg-blend-darken flex flex-col items-center justify-center text-white gap-4 sm:gap-6 px-4 sm:px-6 lg:px-8 bg-main-image">
       <div className="text-center max-w-2xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight mb-2 sm:mb-4">
+        <h1 className="scroll-m-20 text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight mb-2 sm:mb-4">
           Medify AI
         </h1>
-        <h3 className="text-base sm:text-lg lg:text-xl tracking-tight text-gray-200">
+        <h3 className="scroll-m-20 text-base sm:text-lg lg:text-xl tracking-tight text-gray-200">
           Diagnosing patients with just a few clicks
         </h3>
       </div>

@@ -71,23 +71,23 @@ export default function Login() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col items-center space-y-6 w-full justify-center"
+          className="flex flex-col items-center spacing-section w-full justify-center"
         >
           {/* Login Title */}
-          <CardTitle className="text-2xl font-bold text-center mb-4">Login</CardTitle>
+          <CardTitle className="text-center mb-4 text-heading-gradient">Login</CardTitle>
 
           {/* Username Field */}
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Enter email"
                     {...field}
-                    className="w-72" // Adjust the width of the input box
+                    className="form-input w-full"
                   />
                 </FormControl>
                 <FormMessage />
@@ -100,14 +100,14 @@ export default function Login() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Enter password"
                     type="password"
                     {...field}
-                    className="w-72 text-white" // Adjust the width of the input box
+                    className="form-input w-full"
                   />
                 </FormControl>
                 <FormMessage />
@@ -119,13 +119,13 @@ export default function Login() {
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="w-40 bg-green-500 hover:bg-green-500"
+            className="form-button w-full bg-green-500 hover:bg-green-600"
           >
             {isSubmitting ? 'Logging in...' : 'Login'}
           </Button>
         </form>
       </Form>
-      {loginError && <p className="w-full text-center text-sm text-red-600 mt-2">error logging in user</p>}
+      {loginError && <p className="w-full text-red-600 mt-2">error logging in user</p>}
       </CardContent>
       <CardFooter>
         <Link href={'/auth/register'} className="w-full text-center hover:underline text-sm ">New User ? Sign up</Link>
