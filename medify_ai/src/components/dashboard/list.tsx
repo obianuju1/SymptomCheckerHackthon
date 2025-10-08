@@ -1,10 +1,9 @@
-import React from "react";
-import { Card } from "../ui/card";
+import React from 'react'
 
 const List = () => {
   return (
-    <h1>card</h1>
-  );
-};
+    <div>list</div>
+  )
+}
 
-export default List;
+export default List

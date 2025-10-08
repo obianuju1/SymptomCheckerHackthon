@@ -9,12 +9,25 @@ import {
     User
 } from "firebase/auth";
 import { auth,db } from "@/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { useRouter, usePathname } from "next/navigation";
+import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 // Create AuthContext
+interface AppUser {
+    // Firebase Auth properties
+    uid?: string;
+    email?: string | null;
+    displayName?: string | null;
+    photoURL?: string | null;
+    
+    // Custom Firestore properties
+    first_name?: string;
+    last_name?: string;
+    createdAt?: unknown;
+}
+
 interface AuthContextType {
-    user: User | null;
+    user: AppUser | null;
     signUp: (first_name: string, last_name: string, email: string, password: string) => Promise<void>;
     login: (email: string, password: string) => Promise<User | undefined>;
     signOut: () => Promise<void>;
@@ -32,26 +45,21 @@ export const useAuth = (): AuthContextType => {
 
 // AuthProvider Component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<AppUser | null>(null);
     const router = useRouter();
 
     // Check if the user is signed in on mount
-    // useEffect(() => {
-    //     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-    //         if (excludedPaths.includes(pathname)) {
-    //             return; // Do not redirect if on excluded paths
-    //         }
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                await fetchAndMergeUserData(currentUser);
+            } else {
+                setUser(null);
+            }
+        });
 
-    //         setUser(currentUser);
-    //         if (currentUser) {
-    //             router.push("/dashboard");
-    //         } else {
-    //             router.push("/auth/login");
-    //         }
-    //     });
-
-    //     return () => unsubscribe(); // Clean up the subscription
-    // }, [pathname, router]);
+        return () => unsubscribe(); // Clean up the subscription
+    }, []);
 
     // User Registration
     const signUp = async (first_name: string, last_name: string, email: string, password: string) => {
@@ -69,12 +77,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
             console.log('added user to the database')
 
-            setUser(user); // Update the user state
+            await fetchAndMergeUserData(user); // Fetch and merge user data
             console.log('pushing user to the dashboard....')
             router.push("/home"); // Redirect after successful sign-up
-        } catch (error: any) {
-            console.error("SignUp Error:", error.message);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Error registering user";
+            console.error("SignUp Error:", errorMessage);
             throw new Error("Error registering user");
+        }
+    };
+
+    // Fetch user data from Firestore and merge with Firebase user
+    const fetchAndMergeUserData = async (firebaseUser: User) => {
+        try {
+            console.log('Fetching user data for userId:', firebaseUser.uid);
+            const userDoc = doc(db, "users", firebaseUser.uid);
+            const userSnap = await getDoc(userDoc);
+            console.log('User document exists:', userSnap.exists());
+            
+            // Start with Firebase user data
+            const appUser: AppUser = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: firebaseUser.displayName,
+                photoURL: firebaseUser.photoURL
+            };
+            
+            if (userSnap.exists()) {
+                const firestoreData = userSnap.data();
+                console.log('User data from Firestore:', firestoreData);
+                
+                // Add Firestore data
+                appUser.first_name = firestoreData.first_name;
+                appUser.last_name = firestoreData.last_name;
+                appUser.createdAt = firestoreData.createdAt;
+            } else {
+                console.log('No user document found in Firestore');
+            }
+            
+            setUser(appUser);
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+            // Fallback to just Firebase data
+            setUser({
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: firebaseUser.displayName,
+                photoURL: firebaseUser.photoURL
+            });
         }
     };
 
@@ -83,12 +133,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             const userCredentials = await signInWithEmailAndPassword(auth, email, password);
             console.log(userCredentials.user)
-            setUser(userCredentials.user); // Set the logged-in user
+            await fetchAndMergeUserData(userCredentials.user); // Fetch and merge user data
             router.push("/home"); // Redirect to dashboard after login
             return userCredentials.user;
-        } catch (error: any) {
-            console.error("Login Error:", error.message);
-            throw new Error(error.message);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Login failed";
+            console.error("Login Error:", errorMessage);
+            throw new Error(errorMessage);
         }
     };
 
@@ -98,8 +149,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await firebaseSignOut(auth);
             setUser(null); // Reset the user state
             router.push("/login"); // Redirect to login page after sign-out
-        } catch (error: any) {
-            console.error("SignOut Error:", error.message);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Error signing out user";
+            console.error("SignOut Error:", errorMessage);
             throw new Error("Error signing out user");
         }
     };

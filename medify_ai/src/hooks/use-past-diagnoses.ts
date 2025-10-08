@@ -1,20 +1,25 @@
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { API_ENDPOINTS } from '@/lib/constants';
+import { useState, useCallback } from 'react';
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  limit, 
+  startAfter, 
+  getDocs, 
+  deleteDoc, 
+  doc,
+  QueryDocumentSnapshot
+} from 'firebase/firestore';
+import { db } from '@/firebase';
 
 export interface PastDiagnosis {
   _id: string;
   Disease: string;
-  Disease_Normalized: string;
+  Disease_normalized: string;
   Description: string;
   Precautions: string[];
   Date: string;
   symptoms?: string[];
-}
-
-export interface PastDiagnosesResponse {
-  results: PastDiagnosis[];
-  next_cursor?: string;
 }
 
 export interface UsePastDiagnosesReturn {
@@ -24,36 +29,63 @@ export interface UsePastDiagnosesReturn {
   hasMore: boolean;
   fetchDiagnoses: (userId: string, pageSize?: number) => Promise<void>;
   loadMore: (userId: string) => Promise<void>;
+  deleteDiagnosis: (userId: string, diagnosisId: string) => Promise<void>;
 }
 
 export const usePastDiagnoses = (): UsePastDiagnosesReturn => {
   const [diagnoses, setDiagnoses] = useState<PastDiagnosis[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
 
   const fetchDiagnoses = useCallback(async (userId: string, pageSize: number = 10) => {
+    console.log('fetchDiagnoses called with userId:', userId, 'pageSize:', pageSize);
     if (!userId) {
+      console.log('No userId provided, setting error');
       setError('User ID is required');
       return;
     }
 
+    console.log('Starting to fetch diagnoses from Firebase...');
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await axios.get(`${API_ENDPOINTS.PREDICT.replace('/predict', '')}/user/past_diagnoses`, {
-        params: {
-          user_id: userId,
-          page_size: pageSize
-        }
+      // Create a reference to the user's past_diagnoses collection
+      const userDiagnosesRef = collection(db, 'users', userId, 'past_diagnoses');
+      
+      // Create a query ordered by Date (newest first) with limit
+      const q = query(
+        userDiagnosesRef,
+        orderBy('Date', 'desc'),
+        limit(pageSize)
+      );
+      
+      console.log('Executing Firebase query...');
+      const querySnapshot = await getDocs(q);
+      
+      const diagnosesData: PastDiagnosis[] = [];
+      let lastDocument: QueryDocumentSnapshot | null = null;
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        diagnosesData.push({
+          _id: doc.id,
+          Disease: data.Disease || '',
+          Disease_normalized: data.Disease_normalized || data.Disease?.toLowerCase() || '',
+          Description: data.Description || '',
+          Precautions: data.Precautions || [],
+          Date: data.Date || '',
+          symptoms: data.symptoms || []
+        });
+        lastDocument = doc;
       });
-
-      const data: PastDiagnosesResponse = response.data;
-      setDiagnoses(data.results);
-      setNextCursor(data.next_cursor);
+      
+      console.log('Firebase diagnoses fetched:', diagnosesData);
+      setDiagnoses(diagnosesData);
+      setLastDoc(lastDocument);
     } catch (err) {
-      console.error('Error fetching past diagnoses:', err);
+      console.error('Error fetching past diagnoses from Firebase:', err);
       setError('Failed to load past diagnoses');
     } finally {
       setIsLoading(false);
@@ -61,37 +93,81 @@ export const usePastDiagnoses = (): UsePastDiagnosesReturn => {
   }, []);
 
   const loadMore = useCallback(async (userId: string) => {
-    if (!userId || !nextCursor || isLoading) return;
+    if (!userId || !lastDoc || isLoading) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await axios.get(`${API_ENDPOINTS.PREDICT.replace('/predict', '')}/user/past_diagnoses`, {
-        params: {
-          user_id: userId,
-          page_size: 10,
-          start_after: nextCursor
-        }
+      // Create a reference to the user's past_diagnoses collection
+      const userDiagnosesRef = collection(db, 'users', userId, 'past_diagnoses');
+      
+      // Create a query starting after the last document
+      const q = query(
+        userDiagnosesRef,
+        orderBy('Date', 'desc'),
+        startAfter(lastDoc),
+        limit(10)
+      );
+      
+      console.log('Loading more diagnoses from Firebase...');
+      const querySnapshot = await getDocs(q);
+      
+      const newDiagnoses: PastDiagnosis[] = [];
+      let newLastDocument: QueryDocumentSnapshot | null = null;
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        newDiagnoses.push({
+          _id: doc.id,
+          Disease: data.Disease || '',
+          Disease_normalized: data.Disease_normalized || data.Disease?.toLowerCase() || '',
+          Description: data.Description || '',
+          Precautions: data.Precautions || [],
+          Date: data.Date || '',
+          symptoms: data.symptoms || []
+        });
+        newLastDocument = doc;
       });
-
-      const data: PastDiagnosesResponse = response.data;
-      setDiagnoses(prev => [...prev, ...data.results]);
-      setNextCursor(data.next_cursor);
+      
+      console.log('More diagnoses loaded:', newDiagnoses);
+      setDiagnoses(prev => [...prev, ...newDiagnoses]);
+      setLastDoc(newLastDocument);
     } catch (err) {
-      console.error('Error loading more diagnoses:', err);
+      console.error('Error loading more diagnoses from Firebase:', err);
       setError('Failed to load more diagnoses');
     } finally {
       setIsLoading(false);
     }
-  }, [nextCursor, isLoading]);
+  }, [lastDoc, isLoading]);
+
+  const deleteDiagnosis = useCallback(async (userId: string, diagnosisId: string) => {
+    try {
+      console.log('Deleting diagnosis from Firebase:', diagnosisId, 'for user:', userId);
+      
+      // Create a reference to the specific diagnosis document
+      const diagnosisRef = doc(db, 'users', userId, 'past_diagnoses', diagnosisId);
+      
+      // Delete the document from Firebase
+      await deleteDoc(diagnosisRef);
+      
+      console.log('Diagnosis deleted successfully from Firebase');
+      
+      // Remove the diagnosis from local state
+      setDiagnoses(prev => prev.filter(diagnosis => diagnosis._id !== diagnosisId));
+    } catch (err) {
+      console.error('Error deleting diagnosis from Firebase:', err);
+      setError('Failed to delete diagnosis');
+    }
+  }, []);
 
   return {
     diagnoses,
     isLoading,
     error,
-    hasMore: !!nextCursor,
+    hasMore: !!lastDoc,
     fetchDiagnoses,
-    loadMore
+    loadMore,
+    deleteDiagnosis
   };
 };

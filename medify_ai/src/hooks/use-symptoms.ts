@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/firebase';
 import { API_ENDPOINTS, APP_CONFIG } from '@/lib/constants';
 
 export interface SymptomOption {
@@ -25,6 +27,7 @@ export interface UseSymptomsReturn {
   removeSymptom: (symptom: string) => void;
   submitSymptoms: () => Promise<DiagnosisResults>;
   fetchSymptoms: () => Promise<void>;
+  saveDiagnosis: (userId: string, results: DiagnosisResults) => Promise<void>;
 }
 
 export const useSymptoms = (): UseSymptomsReturn => {
@@ -52,6 +55,27 @@ export const useSymptoms = (): UseSymptomsReturn => {
       throw new Error('Failed to load symptoms. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  const saveDiagnosis = useCallback(async (userId: string, results: DiagnosisResults) => {
+    try {
+      const diagnosisData = {
+        Disease: results.Disease,
+        Disease_normalized: results.Disease.toLowerCase(),
+        Description: results.Description,
+        Precautions: results.Precautions,
+        Date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+      };
+
+      // Save to Firestore in the user's past_diagnoses collection
+      const userDiagnosesRef = collection(db, 'users', userId, 'past_diagnoses');
+      await addDoc(userDiagnosesRef, diagnosisData);
+      
+      console.log('Diagnosis saved successfully to Firebase');
+    } catch (error) {
+      console.error('Error saving diagnosis to Firebase:', error);
+      throw error;
     }
   }, []);
 
@@ -108,5 +132,6 @@ export const useSymptoms = (): UseSymptomsReturn => {
     removeSymptom,
     submitSymptoms,
     fetchSymptoms,
+    saveDiagnosis,
   };
 };
