@@ -5,7 +5,6 @@ import { useAuth } from '../../../context/AuthContext';
 import { 
   DiagnosesHeader, 
   DiagnosesList, 
-  DiagnosesEmptyState, 
   DiagnosesLoadingState, 
   DiagnosesErrorState 
 } from '@/components/diagnoses';
@@ -70,19 +69,13 @@ const Diagnoses = () => {
         totalDiagnoses={diagnoses.length}
       />
 
-      {filteredDiagnoses.length === 0 && diagnoses.length > 0 ? (
-        <DiagnosesEmptyState type="no-results" searchTerm={searchTerm} />
-      ) : filteredDiagnoses.length === 0 ? (
-        <DiagnosesEmptyState type="no-diagnoses" />
-      ) : (
-        <DiagnosesList 
-          diagnoses={filteredDiagnoses}
-          hasMore={hasMore}
-          isLoading={isLoading}
-          onLoadMore={handleLoadMore}
-          onDelete={handleDelete}
-        />
-      )}
+      <DiagnosesList 
+        diagnoses={filteredDiagnoses}
+        hasMore={hasMore}
+        isLoading={isLoading}
+        onLoadMore={handleLoadMore}
+        onDelete={handleDelete}
+      />
     </div>
   );
 };

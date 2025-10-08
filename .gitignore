@@ -172,5 +172,13 @@ cython_debug/
 .pypirc
 ml_operations/medifyAccountKey.json
 
-# medify account key
-ml_operations/medifyacc.json
+# Environment files
+.env.local
+.env.*.local
+
+# Environment files
+.env
+.env.*
+
+# medify account key (removed for security)
+# ml_operations/medifyacc.json

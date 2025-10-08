@@ -1,26 +1,46 @@
-import firebase_admin
-from firebase_admin import credentials,firestore
-from dotenv import load_dotenv
+# firebase_config.py
 import os
+import json
+from dotenv import load_dotenv
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-# Load environment variables from the .env file
+# Load environment variables
 load_dotenv()
 
-# Get the path to the Firebase credentials from the environment variable
-FIREBASE_CRED = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-print(FIREBASE_CRED)
-# Print the value to verify it's being loaded correctly
-
-
-# Ensure that the path is valid
-if FIREBASE_CRED:
-    # Initialize Firebase with the credentials
-    cred = credentials.Certificate('/Users/jroyarekhua/Desktop/medifyAccountKey.json')
+def initialize_firebase():
+    """Initialize Firebase Admin SDK using environment variables"""
+    if firebase_admin._apps:
+        return firestore.client()
+    
+    # Get Firebase config from environment variables
+    firebase_config = {
+        "type": "service_account",
+        "project_id": os.getenv("FIREBASE_PROJECT_ID"),
+        "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
+        "private_key": os.getenv("FIREBASE_PRIVATE_KEY", "").replace('\\n', '\n'),
+        "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
+        "client_id": os.getenv("FIREBASE_CLIENT_ID"),
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_CERT_URL"),
+        "universe_domain": "googleapis.com"
+    }
+    
+    # Validate required fields
+    required_fields = ["project_id", "private_key", "client_email"]
+    for field in required_fields:
+        if not firebase_config.get(field):
+            raise ValueError(f"Missing required Firebase environment variable: FIREBASE_{field.upper()}")
+    
+    # Initialize Firebase
+    cred = credentials.Certificate(firebase_config)
     firebase_admin.initialize_app(cred)
-    print("Firebase initialized successfully!")
-else:
-    print("Error: GOOGLE_APPLICATION_CREDENTIALS is not set correctly.")
+    
+    return firestore.client()
 
-db = firestore.client()
+# Initialize Firebase and export db
+db = initialize_firebase()
 
 __all__ = ['db']
